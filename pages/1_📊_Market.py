@@ -141,7 +141,8 @@ if row is not None:
     coin_id = row.get("coin_id", selected_name.lower().replace(" ","-"))
     days    = st.radio("Time range", [7, 30, 90, 365], horizontal=True, format_func=lambda d: f"{d}D")
 
-    hist = get_coin_history(coin_id, days)
+    symbol  = str(row.get("symbol", "")).upper()
+    hist    = get_coin_history(coin_id, days, symbol=symbol)
     if not hist.empty:
         fig_line = go.Figure()
         fig_line.add_trace(go.Scatter(

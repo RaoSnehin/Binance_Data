@@ -8,7 +8,8 @@ env/
 venv/
 .env
 .venv/
-data/
+data/*
+!data/dashboard_cache/
 spot/
 hdfs:/
 .pytest_cache/

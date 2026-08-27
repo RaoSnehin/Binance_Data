@@ -24,7 +24,8 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 st.markdown('<span class="page-title">🌊 Contagion Lab</span>', unsafe_allow_html=True)
 st.caption("PySpark-powered analytics — volatility, safety scoring, cross-asset correlation & ML signals")
 
-LOCAL_CACHE_DIR = "./data/dashboard_cache/"
+import os
+LOCAL_CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "dashboard_cache")
 
 @st.cache_data(ttl=600, show_spinner=False)
 def load_pipeline_data():

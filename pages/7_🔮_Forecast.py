@@ -46,7 +46,7 @@ st.markdown('<span class="page-title">🔮 Forecast & AI Insights</span>', unsaf
 st.caption("ML-based quantile forecasts · Fear & Greed index · AI analyst verdicts · Bitcoin cycle metrics")
 
 # ── Load pipeline data ─────────────────────────────────────────────────────
-LOCAL_CACHE_DIR = "./data/dashboard_cache/"
+LOCAL_CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "dashboard_cache")
 
 @st.cache_data(ttl=600, show_spinner=False)
 def load_forecast_data():

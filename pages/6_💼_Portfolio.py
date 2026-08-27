@@ -111,12 +111,12 @@ with st.form("add_coin_form", clear_on_submit=True):
         selected_coin = st.selectbox("Coin", all_coins, index=0)
     with fc2:
         qty = st.number_input("Quantity", min_value=0.0001, step=0.01, value=1.0, format="%.4f")
-    with fc3:
-        live_price = coin_prices.get(selected_coin.lower(), 0)
+        live_price = float(coin_prices.get(selected_coin.lower(), 0.0) or 0.0)
+        default_val = live_price if live_price > 0 else 100.0
         buy_price  = st.number_input(
-            "Buy Price (USD)", min_value=0.01, step=0.01,
-            value=float(live_price) if live_price > 0 else 100.0,
-            format="%.4f",
+            "Buy Price (USD)", min_value=0.0, step=0.0001,
+            value=default_val,
+            format="%.6f",
         )
     with fc4:
         st.markdown("<br>", unsafe_allow_html=True)

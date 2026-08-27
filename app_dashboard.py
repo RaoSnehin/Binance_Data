@@ -17,7 +17,7 @@ except Exception:
 st.set_page_config(page_title="Crypto Contagion & Safety Dashboard", layout="wide")
 
 # ── Local cache directory ───────────────────────────────────────────────────
-LOCAL_CACHE_DIR = "./data/dashboard_cache/"
+LOCAL_CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "dashboard_cache")
 
 def load_data():
     import shutil

@@ -129,28 +129,54 @@ def get_coin_detail(coin_id: str) -> dict:
 
 
 @st.cache_data(ttl=300, show_spinner=False)
-def get_coin_history(coin_id: str, days: int = 30) -> pd.DataFrame:
-    """Return OHLCV history for a coin as a DataFrame."""
+def get_coin_history(coin_id: str, days: int = 30, symbol: str = "") -> pd.DataFrame:
+    """Return OHLCV history for a coin with automatic Binance fallback."""
+    # 1. Try CoinGecko
     try:
         r = requests.get(
             f"{COINGECKO_BASE}/coins/{coin_id}/market_chart",
             headers=_get_headers(),
             params={"vs_currency": "usd", "days": days, "interval": "daily" if days > 7 else "hourly"},
-            timeout=12,
+            timeout=8,
         )
-        r.raise_for_status()
-        data = r.json()
-        prices = data.get("prices", [])
-        volumes = data.get("total_volumes", [])
-        df = pd.DataFrame(prices, columns=["timestamp_ms", "price"])
-        df["date"] = pd.to_datetime(df["timestamp_ms"], unit="ms")
-        if volumes:
-            vol_df = pd.DataFrame(volumes, columns=["timestamp_ms", "volume"])
-            df["volume"] = vol_df["volume"].values
-        df = df.drop(columns=["timestamp_ms"])
-        return df
+        if r.status_code == 200:
+            data = r.json()
+            prices = data.get("prices", [])
+            volumes = data.get("total_volumes", [])
+            if prices:
+                df = pd.DataFrame(prices, columns=["timestamp_ms", "price"])
+                df["date"] = pd.to_datetime(df["timestamp_ms"], unit="ms")
+                if volumes and len(volumes) == len(prices):
+                    vol_df = pd.DataFrame(volumes, columns=["timestamp_ms", "volume"])
+                    df["volume"] = vol_df["volume"].values
+                df = df.drop(columns=["timestamp_ms"])
+                return df
     except Exception:
-        return pd.DataFrame(columns=["date", "price", "volume"])
+        pass
+
+    # 2. Fallback to Binance Public API (no rate limits)
+    sym_to_try = symbol or coin_id
+    sym_clean = sym_to_try.upper().replace("USDT", "").replace("-", "").replace(" ", "")
+    if sym_clean:
+        try:
+            url = f"https://api.binance.com/api/v3/klines?symbol={sym_clean}USDT&interval=1d&limit={min(days, 500)}"
+            r = requests.get(url, timeout=5)
+            if r.status_code == 200:
+                raw = r.json()
+                if raw and isinstance(raw, list) and len(raw) > 0 and len(raw[0]) >= 6:
+                    rows = []
+                    for item in raw:
+                        rows.append({
+                            "date": pd.to_datetime(item[0], unit="ms"),
+                            "price": float(item[4]),
+                            "volume": float(item[5]),
+                        })
+                    return pd.DataFrame(rows)
+        except Exception:
+            pass
+
+    return pd.DataFrame(columns=["date", "price", "volume"])
+
 
 
 # ── Stub data for offline / rate-limited state ────────────────────────────
